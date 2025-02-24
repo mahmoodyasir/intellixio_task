@@ -22,6 +22,9 @@ services:
       npx nodemon --legacy-watch --watch src --ext ts --exec npx ts-node --files src/index.ts"
     depends_on:
       - mongo
+      - redis_intellixio
+    networks:
+      - app-network-2
 
   mongo:
     image: mongo:6.0
@@ -38,6 +41,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5 
+    networks:
+      - app-network-2
 
   tests:
       image: node:18-alpine
@@ -59,9 +64,26 @@ services:
 
       depends_on:
         - mongo
+        - redis_intellixio
       profiles:
         - test
+      networks:
+        - app-network-2
+    
+  redis_intellixio:
+    image: redis:7.0
+    container_name: redis_intellixio
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network-2
 
 
 volumes:
   mongo-data: 
+
+networks:
+  app-network-2:
+    driver: bridge
+
