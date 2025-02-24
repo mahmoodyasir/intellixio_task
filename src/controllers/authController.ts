@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import User from "../models/User";
 import { SUCCESS_MESSAGES, ERROR_MESSAGES } from "../constants/messages";
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import redisClient from "../utils/redis";
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
@@ -55,4 +56,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const logout = async (req: Request, res: Response): Promise<void> => {};
+export const logout = async (req: Request, res: Response): Promise<void> => {
+
+  try {
+
+    const token = req?.token || "";
+
+    const expiresIn = 60 * 60;
+
+    await redisClient.set(token, "invalid", "EX", expiresIn);
+
+    res.status(204).json({ message: SUCCESS_MESSAGES.LOGOUT_SUCCESSFUL });
+
+  }
+  catch (error) {
+    res.status(500).json({ error: ERROR_MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+
+};
+
